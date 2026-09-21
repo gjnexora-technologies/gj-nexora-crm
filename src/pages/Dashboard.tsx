@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCRM } from '../context/CRMContext';
 import { StatCard } from '../components/common/StatCard';
 import { PipelineSummaryBar } from '../components/dashboard/PipelineSummaryBar';
@@ -15,19 +15,39 @@ interface DashboardProps {
   onOpenRescheduleModal: (id: string) => void;
 }
 
+export const getGreeting = (date: Date = new Date()): string => {
+  const hour = date.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  if (hour < 21) return 'Good evening';
+  return 'Good night';
+};
+
 export const Dashboard: React.FC<DashboardProps> = ({
   onNavigate,
   onOpenAddLeadModal,
   onOpenRescheduleModal,
 }) => {
   const { metrics } = useCRM();
+  const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  const dateFormatted = new Intl.DateTimeFormat('en-IN', {
+  // Periodically refresh current time to update greeting across time boundaries
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000); // 1 minute interval
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const greeting = getGreeting(currentDate);
+
+  const dateFormatted = new Intl.DateTimeFormat(undefined, {
     weekday: 'long',
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(new Date());
+  }).format(currentDate);
 
   return (
     <div className="space-y-5 pb-12 w-full max-w-full min-w-0">
@@ -40,7 +60,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight">
-                Good morning, Demo User
+                {greeting}, Demo User
               </h2>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
